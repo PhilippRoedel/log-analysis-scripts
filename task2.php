@@ -5,6 +5,7 @@
  * Provide a way to identify licenses that are installed on more than one device.
  * What are the 10 license serials that violate this rule the most?
  * On how many distinct devices are these licenses installed?
+ *
 **/
 
 $logFilePath = './data/original.log';
@@ -13,6 +14,7 @@ $handle = fopen($logFilePath, 'r');
 $licenseArray = [];
 $macArray = [];
 $counter = 0;
+$errorCounter = 0;
 $macLicenseArray = [];
 
 
@@ -36,8 +38,14 @@ while (($line = fgets($handle)) !== false) {
     $originalString = gzdecode($gzipEncodedString);
     $decodedData = json_decode($originalString, true);
 
-    $mac = $decodedData['mac'];
-    $macLicenseArray[$mac] = $extractedSerial;
+    if (isset($decodedData['mac'])) {
+        $macData = $decodedData['mac'];
+        $macLicenseArray[$macData] = $extractedSerial;
+    } else {
+        echo "data error in line no. $counter", PHP_EOL;
+        echo "line: $line", PHP_EOL;
+        $errorCounter++;
+    }
 }
 fclose($handle);
 
@@ -51,10 +59,10 @@ foreach ($macLicenseArray as $mac => $license) {
     }
 }
 arsort($macCounts);
-//print_r(array_reverse($valueCounts));
 
 // 10 licenses with the highest installation count
 $firstTen = array_slice($macCounts, 0, 10);
 foreach ($firstTen as $license => $macCount) {
     echo "License '$license' is used for $macCount mac addresses", PHP_EOL;
 }
+echo "due to data errors $errorCounter of $counter lines were not used", PHP_EOL;
