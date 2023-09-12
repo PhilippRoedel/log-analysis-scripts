@@ -4,7 +4,7 @@
  * different classes of hardware that are in use and provide the number of licenses
  * that are active on these types of hardware.
  *
-**/
+ **/
 
 $logFilePath = './data/original.log';
 $handle = fopen($logFilePath, 'r');
@@ -36,6 +36,7 @@ while (($line = fgets($handle)) !== false) {
     $originalString = gzdecode($gzipEncodedString);
     $decodedData = json_decode($originalString, true);
 
+    // create array of license-cpu pairs
     if (isset($decodedData['cpu'])) {
         $cpuData = $decodedData['cpu'];
         $licenseCpuArray[$extractedSerial] = $cpuData;
@@ -46,6 +47,7 @@ while (($line = fgets($handle)) !== false) {
     }
 }
 fclose($handle);
+echo "", PHP_EOL;
 
 // count licenses attached to one cpu model
 $cpuCounts = [];
@@ -59,11 +61,18 @@ foreach ($licenseCpuArray as $license => $cpu) {
 arsort($cpuCounts);
 //print_r(array_reverse($cpuCounts));
 
+// total count of licenses in license-cpu-array
+$totalOfLicensesInArray = 0;
+foreach ($cpuCounts as $cpu => $licenses) {
+    $totalOfLicensesInArray = $totalOfLicensesInArray + $licenses;
+}
 
 // 20 cpus with the highest installation count
+echo "license-cpu-array contains $totalOfLicensesInArray licenses", PHP_EOL;
+echo "", PHP_EOL;
 $firstTen = array_slice($cpuCounts, 0, 20);
 foreach ($firstTen as $cpu => $licenses) {
-    echo "'$cpu' is used for $licenses mac addresses", PHP_EOL;
+    echo "$licenses \t licenses on \t $cpu", PHP_EOL;
 }
 echo "", PHP_EOL;
 echo "due to data errors $errorCounter of $counter lines were not used", PHP_EOL;
